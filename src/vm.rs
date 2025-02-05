@@ -24,10 +24,7 @@ use crate::{
 use std::{collections::BTreeMap, fmt::Debug};
 
 #[cfg(not(feature = "shuttle-test"))]
-use {
-    rand::{thread_rng, Rng},
-    std::sync::Arc,
-};
+use std::sync::Arc;
 
 #[cfg(feature = "shuttle-test")]
 use shuttle::{
@@ -43,8 +40,7 @@ static RUNTIME_ENVIRONMENT_KEY: std::sync::OnceLock<i32> = std::sync::OnceLock::
 
 /// Returns (and if not done before generates) the encryption key for the VM pointer
 pub fn get_runtime_environment_key() -> i32 {
-    *RUNTIME_ENVIRONMENT_KEY
-        .get_or_init(|| thread_rng().gen::<i32>() >> PROGRAM_ENVIRONMENT_KEY_SHIFT)
+    *RUNTIME_ENVIRONMENT_KEY.get_or_init(|| 0_i32 >> PROGRAM_ENVIRONMENT_KEY_SHIFT)
 }
 
 /// VM configuration settings

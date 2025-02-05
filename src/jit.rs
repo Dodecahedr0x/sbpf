@@ -13,18 +13,10 @@
 
 #![allow(clippy::arithmetic_side_effects)]
 
-#[cfg(not(feature = "shuttle-test"))]
-use rand::{thread_rng, Rng};
-
 #[cfg(feature = "shuttle-test")]
 use shuttle::rand::{thread_rng, Rng};
 
-use rand::{
-    distributions::{Distribution, Uniform},
-    rngs::SmallRng,
-    SeedableRng,
-};
-use std::{fmt::Debug, mem, ptr};
+use std::{fmt::Debug, io::Error, mem, ops::Range, ptr};
 
 use crate::{
     ebpf::{self, FIRST_SCRATCH_REG, FRAME_PTR_REG, INSN_SIZE, SCRATCH_REGS},
@@ -51,6 +43,44 @@ pub const MAX_MACHINE_CODE_LENGTH_PER_INSTRUCTION: usize = 110;
 pub const MACHINE_CODE_PER_INSTRUCTION_METER_CHECKPOINT: usize = 24;
 /// The maximum machine code length of the randomized padding
 pub const MAX_START_PADDING_LENGTH: usize = 256;
+
+/// Reimplementation of random functions
+struct Uniform<T: Sized> {
+    start: T,
+    end: T,
+}
+
+impl<T: Sized + Default> Uniform<T> {
+    pub fn new_inclusive(start: T, end: T) -> Self {
+        Uniform { start, end }
+    }
+
+    pub fn sample(&self, rng: &SmallRng) -> T {
+        T::default()
+    }
+}
+
+struct SmallRng {
+    bytes: [u8; 32],
+}
+
+impl SmallRng {
+    pub fn from_rng(_rng: usize) -> Result<Self, Error> {
+        Ok(SmallRng { bytes: [0_u8; 32] })
+    }
+
+    pub fn gen<T: Default>(&self) -> T {
+        T::default()
+    }
+
+    pub fn gen_range<T: Default>(&self, start: Range<T>) -> T {
+        start.start
+    }
+}
+
+pub fn thread_rng() -> usize {
+    0
+}
 
 /// The program compiled to native host machinecode
 pub struct JitProgram {
